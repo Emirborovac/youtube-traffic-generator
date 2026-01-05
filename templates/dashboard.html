@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Tubify{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">TUBIFY</h1>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <button class="nav-tab active" data-tab="input">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Add Videos</span>
+            </button>
+            
+            <button class="nav-tab" data-tab="management">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M3 6h18M3 12h18M3 18h18" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Management</span>
+            </button>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">{{ username[0].upper() }}</div>
+                <div class="user-details">
+                    <p class="user-name">{{ username }}</p>
+                    <p class="user-role">Administrator</p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header Stats -->
+        <div class="header-stats">
+            <div class="stat-card">
+                <span class="stat-label">Active Sessions</span>
+                <span class="stat-value" id="activeSessions">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Pending</span>
+                <span class="stat-value" id="pendingSessions">0</span>
+            </div>
+        </div>
+        
+        <!-- Input Tab -->
+        <div id="inputTab" class="tab-content active">
+            <div class="card">
+                
+                <div class="card-body">
+                    <form id="addVideoForm" class="form">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="videoUrl">YouTube URL</label>
+                                <input 
+                                    type="url" 
+                                    id="videoUrl" 
+                                    placeholder="https://www.youtube.com/watch?v=..." 
+                                    required
+                                >
+                                <span class="form-hint">Only YouTube links are accepted</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="videoType">Type</label>
+                                <select id="videoType" required>
+                                    <option value="video">Video</option>
+                                    <option value="shorts">Shorts</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="viewsCount">Number of Views</label>
+                                <input 
+                                    type="number" 
+                                    id="viewsCount" 
+                                    min="1" 
+                                    max="1000" 
+                                    value="10" 
+                                    required
+                                >
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                Add Video
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Management Tab -->
+        <div id="managementTab" class="tab-content">
+            <div class="card">
+                <div class="card-header-filters">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search videos..." 
+                        class="input-search"
+                    >
+                    <select id="statusFilter" class="select-filter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                        <option value="stopped">Stopped</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Video URL</th>
+                                    <th>Type</th>
+                                    <th>Progress</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="videosTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/input.js') }}"></script>
+<script src="{{ url_for('static', filename='js/management.js') }}"></script>
+<script>
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast toast-${type} show`;
+        
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3000);
+    }
+    
+    // Tab switching
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            
+            // Update active tab
+            navTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update active content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `${tabName}Tab`) {
+                    content.classList.add('active');
+                }
+            });
+            
+            
+            // Load data if management tab
+            if (tabName === 'management') {
+                loadVideos();
+            }
+        });
+    });
+    
+    // Update stats periodically
+    async function updateStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('activeSessions').textContent = 
+                    data.stats.running_sessions;
+                document.getElementById('pendingSessions').textContent = 
+                    data.stats.pending_sessions;
+            }
+        } catch (error) {
+            console.error('Error updating stats:', error);
+        }
+    }
+    
+    // Update stats every 5 seconds
+    updateStats();
+    setInterval(updateStats, 5000);
+</script>
+{% endblock %}
+
