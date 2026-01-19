@@ -25,7 +25,8 @@ def parse_netscape_cookies(cookie_file):
             'expires': cookie.expires if cookie.expires else -1,
             'httpOnly': bool(cookie.has_nonstandard_attr('HttpOnly')),
             'secure': cookie.secure,
-            'sameSite': 'Lax'
+            # Secure cookies MUST use 'None' to be sent cross-site (required for YouTube auth)
+            'sameSite': 'None' if cookie.secure else 'Lax'
         }
         playwright_cookies.append(playwright_cookie)
     

@@ -19,7 +19,8 @@ async def login_youtube_with_cookies():
             'expires': cookie.expires if cookie.expires else -1,
             'httpOnly': bool(cookie.has_nonstandard_attr('HttpOnly')),
             'secure': cookie.secure,
-            'sameSite': 'Lax'  # Default, adjust if needed
+            # Secure cookies MUST use 'None' to be sent cross-site (required for YouTube auth)
+            'sameSite': 'None' if cookie.secure else 'Lax'
         }
         playwright_cookies.append(playwright_cookie)
     

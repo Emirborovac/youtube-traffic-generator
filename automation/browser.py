@@ -28,40 +28,28 @@ class BrowserSession:
         print(f"✓ {log_msg}")
     
     def start(self):
-        """Start browser session"""
+        """Start browser session - 100% identical to test.py"""
         try:
             self.log("Initializing browser", 1)
-            
-            # Proxy configuration
-            proxy = None
-            if Config.PROXY_SERVER:
-                proxy = {
-                    "server": Config.PROXY_SERVER,
-                    "username": Config.PROXY_USERNAME,
-                    "password": Config.PROXY_PASSWORD
-                }
-                self.log("Proxy configured", 2)
             
             # Start Playwright
             self.playwright = sync_playwright().start()
             
-            # Launch browser
-            self.browser = self.playwright.chromium.launch(
-                headless=False,  # Set to True for production
-                proxy=proxy
-            )
-            self.log("Browser launched", 3)
+            # Launch browser (NO proxy - exactly like test.py)
+            self.browser = self.playwright.chromium.launch(headless=False)
+            self.log("Browser launched", 2)
             
-            # Create context
+            # Create context (NO proxy - exactly like test.py)
             self.context = self.browser.new_context()
+            self.log("Context created", 3)
             
-            # Load cookies if provided
+            # Add cookies to context (exactly like test.py)
             if self.cookie_file:
                 cookies = parse_netscape_cookies(self.cookie_file)
                 self.context.add_cookies(cookies)
                 self.log(f"Loaded {len(cookies)} cookies", 4)
             
-            # Create page
+            # Create page (exactly like test.py)
             self.page = self.context.new_page()
             self.log("Browser session ready", 5)
             
