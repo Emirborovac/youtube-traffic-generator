@@ -1,45 +1,35 @@
 import os
 from pathlib import Path
+import http.cookiejar
 
 def parse_netscape_cookies(cookie_file):
     """
-    Parse Netscape format cookies file
+    Parse Netscape format cookies file using http.cookiejar
     Returns list of cookie dictionaries compatible with Playwright
     """
-    cookies = []
-    
     if not os.path.exists(cookie_file):
         raise FileNotFoundError(f"Cookie file not found: {cookie_file}")
     
-    with open(cookie_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            
-            # Skip comments and empty lines
-            if not line or line.startswith('#'):
-                continue
-            
-            try:
-                parts = line.split('\t')
-                if len(parts) >= 7:
-                    domain, flag, path, secure, expiry, name, value = parts[:7]
-                    
-                    cookie = {
-                        'name': name,
-                        'value': value,
-                        'domain': domain,
-                        'path': path,
-                        'expires': int(expiry) if expiry != '0' else -1,
-                        'httpOnly': False,
-                        'secure': secure == 'TRUE',
-                        'sameSite': 'None' if secure == 'TRUE' else 'Lax'
-                    }
-                    cookies.append(cookie)
-            except Exception as e:
-                print(f"⚠ Warning: Error parsing cookie line: {str(e)}")
-                continue
+    # Use MozillaCookieJar for proper Netscape format parsing
+    cookie_jar = http.cookiejar.MozillaCookieJar(cookie_file)
+    cookie_jar.load(ignore_discard=True, ignore_expires=True)
     
-    return cookies
+    # Convert to Playwright format
+    playwright_cookies = []
+    for cookie in cookie_jar:
+        playwright_cookie = {
+            'name': cookie.name,
+            'value': cookie.value,
+            'domain': cookie.domain,
+            'path': cookie.path,
+            'expires': cookie.expires if cookie.expires else -1,
+            'httpOnly': bool(cookie.has_nonstandard_attr('HttpOnly')),
+            'secure': cookie.secure,
+            'sameSite': 'Lax'
+        }
+        playwright_cookies.append(playwright_cookie)
+    
+    return playwright_cookies
 
 def get_available_cookies(cookies_dir='cookies_store'):
     """
