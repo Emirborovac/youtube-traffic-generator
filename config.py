@@ -20,7 +20,7 @@ class Config:
     
     # Automation
     MAX_CONCURRENT_SESSIONS = 10
-    WATCH_DURATION = 90
+    WATCH_DURATION = 300  # 5 minutes
     
     # Paths
     COOKIES_STORE = 'cookies_store'
