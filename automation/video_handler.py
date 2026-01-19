@@ -19,28 +19,36 @@ class VideoHandler:
             if not self.browser.start():
                 return False, self.browser.get_logs()
             
-            # Step 6: Navigate to video
-            self.browser.log("Navigating to video URL", 6)
+            # Step 6: Navigate to YouTube first to activate cookies
+            self.browser.log("Navigating to YouTube to activate session", 6)
+            if not self.browser.navigate("https://www.youtube.com"):
+                self.browser.close()
+                return False, self.browser.get_logs()
+            
+            self.browser.wait(2)
+            
+            # Step 7: Navigate to video
+            self.browser.log("Navigating to video URL", 7)
             if not self.browser.navigate(self.url):
                 self.browser.close()
                 return False, self.browser.get_logs()
             
-            self.browser.log("Video page loaded successfully", 7)
+            self.browser.log("Video page loaded successfully", 8)
             
-            # Step 8: Check and click like button
-            self.browser.log("Checking like button", 8)
+            # Step 9: Check and click like button
+            self.browser.log("Checking like button", 9)
             self._handle_like_button()
             
-            # Step 9: Check and click subscribe button
-            self.browser.log("Checking subscribe button", 9)
+            # Step 10: Check and click subscribe button
+            self.browser.log("Checking subscribe button", 10)
             self._handle_subscribe_button()
             
-            # Step 10: Start watching with random seeking
-            self.browser.log(f"Watching video for {Config.WATCH_DURATION} seconds with random seeking", 10)
+            # Step 11: Start watching with random seeking
+            self.browser.log(f"Watching video for {Config.WATCH_DURATION} seconds with random seeking", 11)
             self._watch_with_seeking(Config.WATCH_DURATION)
             
-            # Step 11: Close browser
-            self.browser.log("Video automation completed successfully", 11)
+            # Step 12: Close browser
+            self.browser.log("Video automation completed successfully", 12)
             self.browser.close()
             
             self.success = True

@@ -17,24 +17,32 @@ class ShortsHandler:
             if not self.browser.start():
                 return False, self.browser.get_logs()
             
-            # Step 6: Navigate to shorts
-            self.browser.log("Navigating to shorts URL", 6)
+            # Step 6: Navigate to YouTube first to activate cookies
+            self.browser.log("Navigating to YouTube to activate session", 6)
+            if not self.browser.navigate("https://www.youtube.com"):
+                self.browser.close()
+                return False, self.browser.get_logs()
+            
+            self.browser.wait(2)
+            
+            # Step 7: Navigate to shorts
+            self.browser.log("Navigating to shorts URL", 7)
             if not self.browser.navigate(self.url):
                 self.browser.close()
                 return False, self.browser.get_logs()
             
-            self.browser.log("Shorts page loaded successfully", 7)
+            self.browser.log("Shorts page loaded successfully", 8)
             
-            # Step 8: Check and click like button
-            self.browser.log("Checking like button", 8)
+            # Step 9: Check and click like button
+            self.browser.log("Checking like button", 9)
             self._handle_like_button()
             
-            # Step 9: Watch shorts
-            self.browser.log(f"Watching shorts for {Config.WATCH_DURATION} seconds", 9)
+            # Step 10: Watch shorts
+            self.browser.log(f"Watching shorts for {Config.WATCH_DURATION} seconds", 10)
             self.browser.wait(Config.WATCH_DURATION)
             
-            # Step 10: Close browser
-            self.browser.log("Shorts automation completed successfully", 10)
+            # Step 11: Close browser
+            self.browser.log("Shorts automation completed successfully", 11)
             self.browser.close()
             
             self.success = True
